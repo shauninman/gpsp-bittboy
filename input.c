@@ -25,10 +25,10 @@ extern uint16_t io_registers[1024 * 16];
 
 void trigger_key(u32 key)
 {
-  u32 p1_cnt = io_registers[REG_P1CNT];
+	u32 p1_cnt = io_registers[REG_P1CNT];
 
-  if((p1_cnt >> 14) & 0x01)
-  {
+	if((p1_cnt >> 14) & 0x01)
+	{
     u32 key_intersection = (p1_cnt & key) & 0x3FF;
 
     if(p1_cnt >> 15)
@@ -38,10 +38,10 @@ void trigger_key(u32 key)
     }
     else
     {
-      if(key_intersection)
-        raise_interrupt(IRQ_KEYPAD);
-    }
-  }
+			if(key_intersection)
+				raise_interrupt(IRQ_KEYPAD);
+		}
+	}
 }
 
 u32 key = 0;
@@ -66,6 +66,24 @@ button_repeat_state_type button_repeat_state = BUTTON_NOT_HELD;
 u32 button_repeat = 0;
 gui_action_type cursor_repeat = CURSOR_NONE;
 
+
+#ifdef PC_BUILD
+u32 gamepad_config_map[12] =
+{
+  BUTTON_ID_UP,                 // Analog up
+  BUTTON_ID_DOWN,               // Analog down
+  BUTTON_ID_LEFT,               // Analog left
+  BUTTON_ID_RIGHT,               // Analog right
+  BUTTON_ID_START,                  // Circle
+  BUTTON_ID_SELECT,                  // Cross
+  BUTTON_ID_L,                  // Ltrigger
+  BUTTON_ID_R,                  // Rtrigger
+  BUTTON_ID_A,              // Square
+  BUTTON_ID_B,             // Select
+  BUTTON_ID_L,              // Square
+  BUTTON_ID_R             // Select
+};
+#endif
 
 #ifdef PSP_BUILD
 
@@ -601,44 +619,101 @@ u32 key_map(SDLKey key_sym)
 
 #if defined(PC_BUILD)
 
-u32 key_map(SDLKey key_sym)
+extern u32 gamepad_config_line_to_button[];
+
+uint32_t tokey(uint32_t i)
+{
+	switch(gamepad_config_map[gamepad_config_line_to_button[i]])
+	{
+		// UP
+		case 0:
+			return BUTTON_UP;
+		break;
+		// LEFT
+		case 1:
+			return BUTTON_LEFT;
+		break;
+		// DOWN
+		case 2:
+			return BUTTON_DOWN;
+		break;
+		// RIGHT
+		case 3:
+			return BUTTON_RIGHT;
+		break;
+		// A
+		case 4:
+			return BUTTON_A;
+		break;
+		// B
+		case 5:
+			return BUTTON_B;
+		break;
+		// L
+		case 6:
+			return BUTTON_L;
+		break;
+		// R
+		case 7:
+			return BUTTON_R;
+		break;
+		// Start
+		case 8:
+			return BUTTON_START;
+		break;
+		// Select
+		case 9:
+			return BUTTON_SELECT;
+		break;
+	}
+	return 0;	
+}
+
+u32 key_map(u32 key_sym)
 {
   switch(key_sym)
   {
-    case SDLK_LSHIFT:
-      return BUTTON_L;
-
-    case SDLK_SPACE:
-      return BUTTON_R;
-
-    case SDLK_DOWN:
-      return BUTTON_DOWN;
-
     case SDLK_UP:
-      return BUTTON_UP;
+      return tokey(0);
+      
+    case SDLK_DOWN:
+      return tokey(1);
 
     case SDLK_LEFT:
-      return BUTTON_LEFT;
+      return tokey(2);
 
     case SDLK_RIGHT:
-      return BUTTON_RIGHT;
-
-    case SDLK_RETURN:
-      return BUTTON_START;
-
-    case SDLK_ESCAPE:
-      return BUTTON_SELECT;
-
+      return tokey(3);
+      
     case SDLK_LCTRL:
-      return BUTTON_A;
+      return tokey(4);
 
     case SDLK_LALT:
-      return BUTTON_B;
+      return tokey(5);
+      
+    case SDLK_LSHIFT:
+      return tokey(6);
+
+    case SDLK_SPACE:
+      return tokey(7);
+      
+    case SDLK_TAB:
+      return tokey(8);
+
+    case SDLK_BACKSPACE:
+      return tokey(9);
+
+    case SDLK_RETURN:
+      return tokey(10);
+
+    case SDLK_ESCAPE:
+      return tokey(11);
 
     default:
       return BUTTON_NONE;
   }
 }
+
 #endif
 #if defined(PC_BUILD) || defined(RPI_BUILD)
 
@@ -795,40 +870,6 @@ u32 update_input()
           return ret_val;
         }
         else
-#ifdef PC_BUILD
-        if(event.key.keysym.sym == SDLK_F1)
-        {
-          debug_on();
-        }
-        else
-
-        if(event.key.keysym.sym == SDLK_F2)
-        {
-          FILE *fp = fopen("palette_ram.bin", "wb");
-          printf("writing palette RAM\n");
-          fwrite(palette_ram, 1024, 1, fp);
-          fclose(fp);
-          printf("writing palette VRAM\n");
-          fp = fopen("vram.bin", "wb");
-          fwrite(vram, 1024 * 96, 1, fp);
-          fclose(fp);
-          printf("writing palette OAM RAM\n");
-          fp = fopen("oam_ram.bin", "wb");
-          fwrite(oam_ram, 1024, 1, fp);
-          fclose(fp);
-          printf("writing palette I/O registers\n");
-          fp = fopen("io_registers.bin", "wb");
-          fwrite(io_registers, 1024, 1, fp);
-          fclose(fp);
-        }
-        else
-
-        if(event.key.keysym.sym == SDLK_F3)
-        {
-          dump_translation_cache();
-        }
-        else
-#endif
         if(event.key.keysym.sym == SDLK_F5)
         {
           char current_savestate_filename[512];
@@ -859,6 +900,7 @@ u32 update_input()
         {
           key |= key_map(event.key.keysym.sym);
           trigger_key(key);
+          
         }
 
         break;

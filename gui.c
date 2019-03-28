@@ -753,6 +753,11 @@ u32 gamepad_config_line_to_button[] =
 
 #endif
 
+#ifdef PC_BUILD
+u32 gamepad_config_line_to_button[] =
+ { 0, 2, 1, 3, 8, 9, 10, 11, 6, 7, 4, 5, 12, 13, 14, 15 };
+#endif
+
 static const char *scale_options[] =
 {
 #ifdef PSP_BUILD
@@ -891,6 +896,38 @@ enum file_options {
 #endif
 #define FILE_OPTION_COUNT (fo_main_option_count + PLAT_BUTTON_COUNT)
 
+/* We need to quadruple the size of struct in order to avoid issues. */
+
+void load_controllers()
+{
+	char config_path[512];
+	FILE* fp;
+	
+	snprintf(config_path, sizeof(config_path), "%s" PATH_SEPARATOR "%s", main_path, "controls.cfg");
+	fp = fopen(config_path, "rb");
+	if (fp)
+	{
+		fread(&gamepad_config_map, 12*sizeof(uint32_t), sizeof(uint8_t), fp);
+		fread(&gamepad_config_line_to_button, 12*sizeof(uint32_t), sizeof(uint8_t), fp);
+		fclose(fp);
+	}
+}
+
+void save_controllers()
+{
+	char config_path[512];
+	FILE* fp;
+	
+	snprintf(config_path, sizeof(config_path), "%s" PATH_SEPARATOR "%s", main_path, "controls.cfg");
+	fp = fopen(config_path, "wb");
+	if (fp)
+	{
+		fwrite(&gamepad_config_map, 12*sizeof(uint32_t), sizeof(uint8_t), fp);
+		fwrite(&gamepad_config_line_to_button, 12*sizeof(uint32_t), sizeof(uint8_t), fp);
+		fclose(fp);
+	}
+}
+
 s32 load_config_file()
 {
   char config_path[512];
@@ -944,13 +981,12 @@ s32 load_config_file()
         }
       }
 
-      if(menu_button == -1 && PLAT_MENU_BUTTON >= 0)
+      /*if(menu_button == -1 && PLAT_MENU_BUTTON >= 0)
       {
         gamepad_config_map[PLAT_MENU_BUTTON] = BUTTON_ID_MENU;
-      }
+      }*/
 #endif
-
-      file_close(config_file);
+		file_close(config_file);
     }
 
     return 0;
@@ -992,12 +1028,13 @@ s32 save_game_config_file()
   return -1;
 }
 
+
 s32 save_config_file()
 {
   char config_path[512];
 
   sprintf(config_path, "%s" PATH_SEPARATOR "%s", main_path, GPSP_CONFIG_FILENAME);
-
+  
   file_open(config_file, config_path, write);
 
   save_game_config_file();
@@ -1132,7 +1169,7 @@ u32 menu(u16 *original_screen)
   auto void choose_menu();
   auto void clear_help();
 
-#ifndef PC_BUILD
+//#ifndef PC_BUILD
   static const char * const gamepad_help[] =
   {
     "Up button on GBA d-pad.",
@@ -1162,8 +1199,8 @@ u32 menu(u16 *original_screen)
   static const char *gamepad_config_buttons[] =
   {
     "UP",
-    "DOWN",
     "LEFT",
+    "DOWN",
     "RIGHT",
     "A",
     "B",
@@ -1171,20 +1208,13 @@ u32 menu(u16 *original_screen)
     "R",
     "START",
     "SELECT",
-    "MENU",
-    "FASTFORWARD",
+    /* Disabled for now */
+    /*"FASTFORWARD",
     "LOAD STATE",
-    "SAVE STATE",
-    "RAPIDFIRE A",
-    "RAPIDFIRE B",
-    "RAPIDFIRE L",
-    "RAPIDFIRE R",
-    "VOLUME UP",
-    "VOLUME DOWN",
-    "DISPLAY FPS",
+    "SAVE STATE",*/
     "NOTHING"
   };
-#endif
+//#endif
 
   void menu_update_clock()
   {
@@ -1207,6 +1237,7 @@ u32 menu(u16 *original_screen)
   {
     menu_get_clock_speed();
     save_config_file();
+    save_controllers();
     quit();
   }
 
@@ -1304,7 +1335,9 @@ u32 menu(u16 *original_screen)
 
   void submenu_gamepad()
   {
-
+		print_string("Now guys, will you stop bitching to me about lack", COLOR_ROM_INFO, COLOR_BG, 6, 10);
+		print_string("of remapping ? Don't you know how much time it", COLOR_ROM_INFO, COLOR_BG, 6, 20);
+		print_string("takes to implement ? Fucking morons.", COLOR_ROM_INFO, COLOR_BG, 6, 30);
   }
 
   void submenu_analog()
@@ -1314,20 +1347,20 @@ u32 menu(u16 *original_screen)
 
   void submenu_savestate()
   {
-    print_string("Savestate options:", COLOR_ACTIVE_ITEM, COLOR_BG, 10, 70);
-    menu_change_state();
+		print_string("Savestate options:", COLOR_ACTIVE_ITEM, COLOR_BG, 10, 70);
+		menu_change_state();
   }
 
   void submenu_main()
   {
-    strncpy(print_buffer, gamepak_filename, 80);
-    print_string(print_buffer, COLOR_ROM_INFO, COLOR_BG, 10, 10);
-    sprintf(print_buffer, "%s  %s  %s", gamepak_title,
-     gamepak_code, gamepak_maker);
-    print_string(print_buffer, COLOR_ROM_INFO, COLOR_BG, 10, 20);
+		print_string("Ported to Bittboy by Gameblabla", COLOR_ROM_INFO, COLOR_BG, 6, 184);
+	  
+		strncpy(print_buffer, gamepak_filename, 80);
+		print_string(print_buffer, COLOR_ROM_INFO, COLOR_BG, 6, 10);
+		sprintf(print_buffer, "%s  %s  %s", gamepak_title, gamepak_code, gamepak_maker);
+		print_string(print_buffer, COLOR_ROM_INFO, COLOR_BG, 6, 20);
 
-    get_savestate_filename_noshot(savestate_slot,
-     current_savestate_filename);
+		get_savestate_filename_noshot(savestate_slot, current_savestate_filename);
   }
 
   const char *yes_no_options[] = { "no", "yes" };
@@ -1589,18 +1622,30 @@ u32 menu(u16 *original_screen)
 
   menu_option_type gamepad_config_options[] =
   {
-    submenu_option(NULL, "Back", "Return to the main menu.", 13)
+    gamepad_config_option("D-pad up     ", 0),
+    gamepad_config_option("D-pad down   ", 1),
+    gamepad_config_option("D-pad left   ", 2),
+    gamepad_config_option("D-pad right  ", 3),
+    gamepad_config_option("A            ", 4),
+    gamepad_config_option("B            ", 5),
+    gamepad_config_option("X            ", 6),
+    gamepad_config_option("Y            ", 7),
+    gamepad_config_option("Left Trigger ", 8),
+    gamepad_config_option("Right Trigger", 9),
+    gamepad_config_option("Start        ", 10),
+    gamepad_config_option("Select       ", 11),
+    submenu_option(NULL, "Back", "Return to the main menu.", 12)
   };
 
-  menu_option_type analog_config_options[] =
+  /*menu_option_type analog_config_options[] =
   {
     submenu_option(NULL, "Back", "Return to the main menu.", 11)
   };
-
+*/
 #endif
 
   make_menu(gamepad_config, submenu_gamepad, NULL);
-  make_menu(analog_config, submenu_analog, NULL);
+  //make_menu(analog_config, submenu_analog, NULL);
 
   menu_option_type main_options[] =
   {
@@ -1625,22 +1670,22 @@ u32 menu(u16 *original_screen)
      "Select to change the in-game behavior of buttons\n"
      "and d-pad.", 6),
 #ifndef WIZ_BUILD
-    submenu_option(&analog_config_menu, "Configure analog input",
-     "Select to change the in-game behavior of the analog nub.", 7),
+    /*submenu_option(&analog_config_menu, "Configure analog input",
+     "Select to change the in-game behavior of the analog nub.", 7),*/
 #endif
     submenu_option(&cheats_misc_menu, "Cheats and Miscellaneous options",
      "Select to manage cheats, set backup behavior,\n"
-     "and set device clock speed.", 9),
+     "and set device clock speed.", 7),
     action_option(menu_load, NULL, "Load new game",
      "Select to load a new game\n"
-     "(will exit a game if currently playing).", 11),
+     "(will exit a game if currently playing).", 8),
     action_option(menu_restart, NULL, "Restart game",
      "Select to reset the GBA with the current game\n"
-     "loaded.", 12),
+     "loaded.", 9),
     action_option(menu_exit, NULL, "Return to game",
-     "Select to exit this menu and resume gameplay.", 13),
+     "Select to exit this menu and resume gameplay.", 10),
     action_option(menu_quit, NULL, "Exit gpSP",
-     "Select to exit gpSP and return to the menu.", 15)
+     "Select to exit gpSP and return to the menu.", 12)
   };
 
   make_menu(main, submenu_main, NULL);

@@ -224,6 +224,8 @@ void init_main()
   flush_translation_cache_bios();
 }
 
+extern void load_controllers();
+
 int main(int argc, char *argv[])
 {
   char bios_filename[512];
@@ -302,6 +304,8 @@ int main(int argc, char *argv[])
   init_input();
 
   video_resolution_large();
+  
+  load_controllers();
 
   if(argc > 1)
   {
