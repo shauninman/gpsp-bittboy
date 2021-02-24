@@ -1674,9 +1674,9 @@ u32 menu(u16 *original_screen)
 //     /*submenu_option(&analog_config_menu, "Configure analog input",
 //      "Select to change the in-game behavior of the analog nub.", 7),*/
 // #endif
-//     submenu_option(&cheats_misc_menu, "Cheats and Miscellaneous options",
-//      "Select to manage cheats, set backup behavior,\n"
-//      "and set device clock speed.", 7),
+    submenu_option(&cheats_misc_menu, "Cheats and Miscellaneous options",
+     "Select to manage cheats, set backup behavior,\n"
+     "and set device clock speed.", 7),
 //     action_option(menu_load, NULL, "Load new game",
 //      "Select to load a new game\n"
 //      "(will exit a game if currently playing).", 8),

@@ -91,6 +91,7 @@ u32 clock_speed = 200;
 #else
 u32 clock_speed = 333;
 #endif
+char rom_path[512];
 char emu_path[512];
 char cfg_path[512];
 
@@ -311,7 +312,6 @@ int main(int argc, char *argv[])
   strcpy(tmp, "/.gpsp");
   mkdir(cfg_path, 0755);
   
-  printf("cfg_path: %s\n", cfg_path);
   chdir(cfg_path);
 
   load_config_file();
@@ -326,6 +326,8 @@ int main(int argc, char *argv[])
 
   if(argc > 1)
   {
+	strcpy(rom_path, argv[1]);
+	  
     if(load_gamepak(argv[1]) == -1)
     {
 #ifndef PSP_BUILD
@@ -991,7 +993,7 @@ void change_ext(const char *src, char *buffer, const char *extension)
     strcpy(dot_position, extension);
 }
 
-// make path: <emu_path>/<romname>.<ext>
+// make path: <cfg_path>/<romname>.<ext>
 void make_rpath(char *buff, size_t size, const char *ext)
 {
   char *p;

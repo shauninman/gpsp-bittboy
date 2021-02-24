@@ -19,6 +19,8 @@
 
 #include "common.h"
 
+#include <mmenu.h>
+
 // Special thanks to psp298 for the analog->dpad code!
 
 extern uint16_t io_registers[1024 * 16];
@@ -859,11 +861,50 @@ u32 update_input()
         if(event.key.keysym.sym == SDLK_F10)
 #endif
         {
-          u16 *screen_copy = copy_screen();
-          u32 ret_val = menu(screen_copy);
-          free(screen_copy);
+			u32 ret_val = 0;
+			char save_path[512];
+			make_rpath(save_path, 512, "%i.svs");
 
-          return ret_val;
+			SDL_Surface* screen = get_screen();
+
+			MenuReturnStatus status = ShowMenu(rom_path, save_path, screen, kMenuEventKeyDown);
+			
+			if (status==kStatusExitGame) {
+				SDL_FillRect(screen, NULL, 0);
+				SDL_Flip(screen);
+				quit();
+			}
+			else if (status==kStatusOpenMenu) {
+	            u16 *screen_copy = copy_screen();
+	            ret_val = menu(screen_copy);
+	            free(screen_copy);
+			}
+			else if (status>=kStatusLoadSlot) {
+				savestate_slot = status - kStatusLoadSlot;
+
+	            char current_savestate_filename[512];
+	            get_savestate_filename_noshot(savestate_slot,
+	             current_savestate_filename);
+	            load_state(current_savestate_filename);
+	            debug_on();
+			}
+			else if (status>=kStatusSaveSlot) {
+				savestate_slot = status - kStatusSaveSlot;
+				
+	            char current_savestate_filename[512];
+	            u16 *current_screen = copy_screen();
+	            get_savestate_filename_noshot(savestate_slot,
+	             current_savestate_filename);
+	            save_state(current_savestate_filename, current_screen);
+	            free(current_screen);
+			}
+			
+			if (status<kStatusOpenMenu) {
+				SDL_FillRect(screen, NULL, 0);
+				SDL_Flip(screen);
+				ret_val = 1;
+			}
+          return ret_val; // 1 to return to game
         }
         else
         if(event.key.keysym.sym == SDLK_F5)

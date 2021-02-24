@@ -47,6 +47,9 @@ void debug_screen_printl(const char *format, ...);
 void debug_screen_newline(u32 count);
 void debug_screen_update();
 
+struct SDL_Surface;
+SDL_Surface* get_screen();
+
 extern u32 frame_speed;
 
 extern u32 resolution_width, resolution_height;

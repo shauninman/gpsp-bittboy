@@ -3962,6 +3962,10 @@ void init_video()
   SDL_ShowCursor(0);
 }
 
+SDL_Surface* get_screen() {
+	return rl_screen;
+}
+
 #endif
 
 video_scale_type screen_scale = scaled_aspect;

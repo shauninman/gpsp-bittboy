@@ -83,6 +83,7 @@ extern u32 flush_ram_count;
 
 extern u64 base_timestamp;
 
+extern char rom_path[512];
 extern char emu_path[512];
 extern char cfg_path[512];
 
