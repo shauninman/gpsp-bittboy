@@ -17,6 +17,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include <sys/stat.h>
+#include <sys/types.h>
+
 #include "common.h"
 
 #ifdef PSP_BUILD
@@ -88,7 +91,8 @@ u32 clock_speed = 200;
 #else
 u32 clock_speed = 333;
 #endif
-char main_path[512];
+char emu_path[512];
+char cfg_path[512];
 
 void trigger_ext_event();
 
@@ -177,7 +181,7 @@ static void save_romdir(void)
 {
   char buff[512];
 
-  snprintf(buff, sizeof(buff), "%s" PATH_SEPARATOR "romdir.txt", main_path);
+  snprintf(buff, sizeof(buff), "%s" PATH_SEPARATOR "romdir.txt", emu_path);
   file_open(romdir_file, buff, write);
 
   if(file_check_valid(romdir_file))
@@ -239,12 +243,11 @@ int main(int argc, char *argv[])
 
   init_gamepak_buffer();
 
-  // Copy the directory path of the executable into main_path
+  // Copy the directory path of the executable into emu_path
 
   // ChangeWorkingDirectory will null out the filename out of the path
   ChangeWorkingDirectory(argv[0]);
-
-  getcwd(main_path, 512);
+  getcwd(emu_path, 512);
 
 #ifdef PSP_BUILD
   delay_us(2500000);
@@ -259,45 +262,59 @@ int main(int argc, char *argv[])
 
   init_video();
 
-  sprintf(bios_filename, "%s" PATH_SEPARATOR "%s", main_path, "gba_bios.bin");
+  sprintf(bios_filename, "%s" PATH_SEPARATOR "%s", emu_path, "gba_bios.bin");
   ret = load_bios(bios_filename);
   if (ret != 0)
     ret = load_bios("gba_bios.bin");
+  if (ret!=0) {
+	  printf("Fallback to Trimui provided gba_bios.bin\n");
+	  ret = load_bios("/usr/trimui/bin/gba_bios.bin");
+  }
   if (ret != 0)
   {
-    gui_action_type gui_action = CURSOR_NONE;
-
-    debug_screen_start();
-    debug_screen_printl("                                                  ");
-    debug_screen_printl("Sorry, but gpSP requires a Gameboy Advance BIOS   ");
-    debug_screen_printl("image to run correctly. Make sure to get an       ");
-    debug_screen_printl("authentic one, it'll be exactly 16384 bytes large ");
-    debug_screen_printl("and should have the following md5sum value:       ");
-    debug_screen_printl("                                                  ");
-    debug_screen_printl("a860e8c0b6d573d191e4ec7db1b1e4f6                  ");
-    debug_screen_printl("                                                  ");
-    debug_screen_printl("When you do get it name it gba_bios.bin and put it");
-#ifdef PND_BUILD
-    debug_screen_printl("in <SD card>/pandora/appdata/gpsp/ .              ");
-#else
-    debug_screen_printl("in the same directory as gpSP.                    ");
-#endif
-    debug_screen_printl("                                                  ");
-    debug_screen_printl("Press any button to exit.                         ");
-
-    debug_screen_update();
-
-    while(gui_action == CURSOR_NONE)
-    {
-      gui_action = get_gui_input();
-      delay_us(15000);
-    }
-
-    debug_screen_end();
+//     gui_action_type gui_action = CURSOR_NONE;
+// 
+//     debug_screen_start();
+//     debug_screen_printl("                                                  ");
+//     debug_screen_printl("Sorry, but gpSP requires a Gameboy Advance BIOS   ");
+//     debug_screen_printl("image to run correctly. Make sure to get an       ");
+//     debug_screen_printl("authentic one, it'll be exactly 16384 bytes large ");
+//     debug_screen_printl("and should have the following md5sum value:       ");
+//     debug_screen_printl("                                                  ");
+//     debug_screen_printl("a860e8c0b6d573d191e4ec7db1b1e4f6                  ");
+//     debug_screen_printl("                                                  ");
+//     debug_screen_printl("When you do get it name it gba_bios.bin and put it");
+// #ifdef PND_BUILD
+//     debug_screen_printl("in <SD card>/pandora/appdata/gpsp/ .              ");
+// #else
+//     debug_screen_printl("in the same directory as gpSP.                    ");
+// #endif
+//     debug_screen_printl("                                                  ");
+//     debug_screen_printl("Press any button to exit.                         ");
+// 
+//     debug_screen_update();
+// 
+//     while(gui_action == CURSOR_NONE)
+//     {
+//       gui_action = get_gui_input();
+//       delay_us(15000);
+//     }
+// 
+//     debug_screen_end();
 
     quit();
   }
 
+  char *env_home = getenv("HOME");
+  strcpy(cfg_path, env_home);
+  char* tmp = cfg_path + strlen(cfg_path);
+  strcpy(tmp, "/.gpsp");
+  mkdir(cfg_path, 0755);
+  
+  printf("cfg_path: %s\n", cfg_path);
+  chdir(cfg_path);
+
+  load_config_file();
   init_main();
   init_sound(1);
 
@@ -326,7 +343,7 @@ int main(int argc, char *argv[])
   else
   {
     char load_filename[512];
-    switch_to_romdir();
+//     switch_to_romdir();
     if(load_file(file_ext, load_filename) == -1)
     {
       menu(copy_screen());
@@ -864,7 +881,7 @@ void synchronize()
 
 void quit()
 {
-  save_romdir();
+//   save_romdir();
 
   if(!update_backup_flag)
     update_backup_force();
@@ -974,15 +991,18 @@ void change_ext(const char *src, char *buffer, const char *extension)
     strcpy(dot_position, extension);
 }
 
-// make path: <main_path>/<romname>.<ext>
+// make path: <emu_path>/<romname>.<ext>
 void make_rpath(char *buff, size_t size, const char *ext)
 {
   char *p;
   p = strrchr(gamepak_filename, PATH_SEPARATOR_CHAR);
   if (p == NULL)
-    p = gamepak_filename;
+      p = gamepak_filename;
+  else
+	  p += 1; // skip the path separator :facepalm:
+  
 
-  snprintf(buff, size, "%s/%s", main_path, p);
+  snprintf(buff, size, "%s/%s", cfg_path, p);
   p = strrchr(buff, '.');
   if (p != NULL)
     strcpy(p, ext);

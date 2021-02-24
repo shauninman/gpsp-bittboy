@@ -115,7 +115,7 @@
   #include <time.h>
   #include <stdio.h>
 #else
-  #include "SDL.h"
+  #include <SDL/SDL.h>
 
 #ifdef ARM_ARCH
   #define function_cc
@@ -233,7 +233,7 @@ typedef u32 fixed8_24;
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
-#include "SDL.h"
+#include <SDL/SDL.h>
 #include "cpu.h"
 #include "memory.h"
 #include "video.h"

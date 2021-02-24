@@ -755,7 +755,7 @@ u32 gamepad_config_line_to_button[] =
 
 #ifdef PC_BUILD
 u32 gamepad_config_line_to_button[] =
- { 0, 2, 1, 3, 8, 9, 10, 11, 6, 7, 4, 5, 12, 13, 14, 15 };
+ { 0, 2, 1, 3, 8, 9, 6, 7, 4, 5, 10, 11, 12, 13, 14, 15 };
 #endif
 
 static const char *scale_options[] =
@@ -903,7 +903,7 @@ void load_controllers()
 	char config_path[512];
 	FILE* fp;
 	
-	snprintf(config_path, sizeof(config_path), "%s" PATH_SEPARATOR "%s", main_path, "controls.cfg");
+	snprintf(config_path, sizeof(config_path), "%s" PATH_SEPARATOR "%s", cfg_path, "controls.cfg");
 	fp = fopen(config_path, "rb");
 	if (fp)
 	{
@@ -918,7 +918,7 @@ void save_controllers()
 	char config_path[512];
 	FILE* fp;
 	
-	snprintf(config_path, sizeof(config_path), "%s" PATH_SEPARATOR "%s", main_path, "controls.cfg");
+	snprintf(config_path, sizeof(config_path), "%s" PATH_SEPARATOR "%s", cfg_path, "controls.cfg");
 	fp = fopen(config_path, "wb");
 	if (fp)
 	{
@@ -932,7 +932,7 @@ s32 load_config_file()
 {
   char config_path[512];
 
-  sprintf(config_path, "%s" PATH_SEPARATOR "%s", main_path, GPSP_CONFIG_FILENAME);
+  sprintf(config_path, "%s" PATH_SEPARATOR "%s", cfg_path, GPSP_CONFIG_FILENAME);
 
   file_open(config_file, config_path, read);
 
@@ -981,12 +981,13 @@ s32 load_config_file()
         }
       }
 
-      /*if(menu_button == -1 && PLAT_MENU_BUTTON >= 0)
+      if(menu_button == -1 && PLAT_MENU_BUTTON >= 0)
       {
         gamepad_config_map[PLAT_MENU_BUTTON] = BUTTON_ID_MENU;
-      }*/
+      }
 #endif
-		file_close(config_file);
+
+      file_close(config_file);
     }
 
     return 0;
@@ -1033,8 +1034,8 @@ s32 save_config_file()
 {
   char config_path[512];
 
-  sprintf(config_path, "%s" PATH_SEPARATOR "%s", main_path, GPSP_CONFIG_FILENAME);
-  
+  sprintf(config_path, "%s" PATH_SEPARATOR "%s", cfg_path, GPSP_CONFIG_FILENAME);
+
   file_open(config_file, config_path, write);
 
   save_game_config_file();
@@ -1169,7 +1170,7 @@ u32 menu(u16 *original_screen)
   auto void choose_menu();
   auto void clear_help();
 
-//#ifndef PC_BUILD
+// #ifndef PC_BUILD
   static const char * const gamepad_help[] =
   {
     "Up button on GBA d-pad.",
@@ -1214,7 +1215,7 @@ u32 menu(u16 *original_screen)
     "SAVE STATE",*/
     "NOTHING"
   };
-//#endif
+// #endif
 
   void menu_update_clock()
   {
@@ -1315,12 +1316,12 @@ u32 menu(u16 *original_screen)
 
   void menu_fix_gamepad_help()
   {
-#ifndef PC_BUILD
+// #ifndef PC_BUILD
     clear_help();
     current_option->help_string =
      gamepad_help[gamepad_config_map[
      gamepad_config_line_to_button[current_option_num]]];
-#endif
+// #endif
   }
 
   void submenu_graphics_sound()
@@ -1662,23 +1663,23 @@ u32 menu(u16 *original_screen)
      "Select to save the game state to the current slot\n"
      "for this game. See the extended menu for more info.\n"
      "Press left + right to change the current slot.", 3),
-    submenu_option(&savestate_menu, "Savestate options",
-     "Select to enter a menu for loading, saving, and\n"
-     "viewing the currently active savestate for this game\n"
-     "(or to load a savestate file from another game)", 4),
-    submenu_option(&gamepad_config_menu, "Configure gamepad input",
-     "Select to change the in-game behavior of buttons\n"
-     "and d-pad.", 6),
-#ifndef WIZ_BUILD
-    /*submenu_option(&analog_config_menu, "Configure analog input",
-     "Select to change the in-game behavior of the analog nub.", 7),*/
-#endif
-    submenu_option(&cheats_misc_menu, "Cheats and Miscellaneous options",
-     "Select to manage cheats, set backup behavior,\n"
-     "and set device clock speed.", 7),
-    action_option(menu_load, NULL, "Load new game",
-     "Select to load a new game\n"
-     "(will exit a game if currently playing).", 8),
+//     submenu_option(&savestate_menu, "Savestate options",
+//      "Select to enter a menu for loading, saving, and\n"
+//      "viewing the currently active savestate for this game\n"
+//      "(or to load a savestate file from another game)", 4),
+//     submenu_option(&gamepad_config_menu, "Configure gamepad input",
+//      "Select to change the in-game behavior of buttons\n"
+//      "and d-pad.", 6),
+// #ifndef WIZ_BUILD
+//     /*submenu_option(&analog_config_menu, "Configure analog input",
+//      "Select to change the in-game behavior of the analog nub.", 7),*/
+// #endif
+//     submenu_option(&cheats_misc_menu, "Cheats and Miscellaneous options",
+//      "Select to manage cheats, set backup behavior,\n"
+//      "and set device clock speed.", 7),
+//     action_option(menu_load, NULL, "Load new game",
+//      "Select to load a new game\n"
+//      "(will exit a game if currently playing).", 8),
     action_option(menu_restart, NULL, "Restart game",
      "Select to reset the GBA with the current game\n"
      "loaded.", 9),
@@ -1788,8 +1789,7 @@ u32 menu(u16 *original_screen)
       }
     }
 
-    print_string(current_option->help_string, COLOR_HELP_TEXT,
-     COLOR_BG, 8, 210);
+    //print_string(current_option->help_string, COLOR_HELP_TEXT, COLOR_BG, 8, 210);
 
     flip_screen();
 
@@ -1847,6 +1847,7 @@ u32 menu(u16 *original_screen)
         break;
 
       case CURSOR_EXIT:
+      case CURSOR_BACK:
         if(current_menu == &main_menu)
           menu_exit();
 

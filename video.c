@@ -3941,7 +3941,8 @@ void init_video()
 
 void init_video()
 {
-  SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_NOPARACHUTE);
+  SDL_Init(SDL_INIT_VIDEO);
+  // SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_NOPARACHUTE);
 
 #ifdef GP2X_BUILD
   SDL_GP2X_AllowGfxMemory(NULL, 0);
@@ -4232,6 +4233,8 @@ void video_resolution_small()
 #endif
   resolution_width = small_resolution_width;
   resolution_height = small_resolution_height;
+  
+  SDL_FillRect(rl_screen, NULL, 0);
 }
 
 void set_gba_resolution(video_scale_type scale)

@@ -373,7 +373,7 @@ void gpsp_plat_init(void)
 
 void gpsp_plat_quit(void)
 {
-  chdir(main_path);
+  // chdir(emu_path);
 
   warm_finish();
 #ifdef POLLUX_BUILD

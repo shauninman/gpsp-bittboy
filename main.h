@@ -83,7 +83,8 @@ extern u32 flush_ram_count;
 
 extern u64 base_timestamp;
 
-extern char main_path[512];
+extern char emu_path[512];
+extern char cfg_path[512];
 
 extern u32 update_backup_flag;
 extern u32 clock_speed;

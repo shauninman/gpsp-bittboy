@@ -2009,9 +2009,13 @@ s32 load_game_config(char *gamepak_title, char *gamepak_code, char *gamepak_make
   translation_gate_targets = 0;
   flash_device_id = FLASH_DEVICE_MACRONIX_64KB;
 
-  sprintf(config_path, "%s" PATH_SEPARATOR "%s", main_path, CONFIG_FILENAME);
-
+  sprintf(config_path, "%s" PATH_SEPARATOR "%s", emu_path, CONFIG_FILENAME);
   config_file = fopen(config_path, "rb");
+  
+  if (!config_file) {
+	  sprintf(config_path, "%s" PATH_SEPARATOR "%s", emu_path, CONFIG_FILENAME);
+	  config_file = fopen(config_path, "rb");
+  }
 
   if(config_file)
   {
@@ -2176,13 +2180,15 @@ u32 load_gamepak(char *name)
     gamepak_filename[sizeof(gamepak_filename) - 1] = 0;
 
     make_rpath(backup_filename, sizeof(backup_filename), ".sav");
-    if (!load_backup(backup_filename))
-    {
-      // try path used by older versions
-      strcpy(backup_filename, name);
-      change_ext(gamepak_filename, backup_filename, ".sav");
-      load_backup(backup_filename);
-    }
+	printf("backup path: %s\n", backup_filename);
+	load_backup(backup_filename);
+    // if (!load_backup(backup_filename))
+    // {
+    //   // try path used by older versions
+    //   strcpy(backup_filename, name);
+    //   change_ext(gamepak_filename, backup_filename, ".sav");
+    //   load_backup(backup_filename);
+    // }
 
     memcpy(gamepak_title, gamepak_rom + 0xA0, 12);
     memcpy(gamepak_code, gamepak_rom + 0xAC, 4);

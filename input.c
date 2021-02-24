@@ -685,26 +685,23 @@ u32 key_map(u32 key_sym)
     case SDLK_RIGHT:
       return tokey(3);
       
-    case SDLK_LCTRL:
-      return tokey(4);
-
-    case SDLK_LALT:
-      return tokey(5);
-      
-    case SDLK_LSHIFT:
-      return tokey(6);
-
     case SDLK_SPACE:
-      return tokey(7);
+      return tokey(4); // A
+
+    case SDLK_LCTRL:
+      return tokey(5); // B
       
     case SDLK_TAB:
-      return tokey(8);
+      return tokey(6); // L
 
     case SDLK_BACKSPACE:
-      return tokey(9);
-
+      return tokey(7); // R
+      
     case SDLK_RETURN:
-      return tokey(10);
+      return tokey(8); // Start
+
+    case SDLK_RCTRL:
+      return tokey(9); // Select
 
     case SDLK_ESCAPE:
       return tokey(11);
@@ -762,7 +759,7 @@ gui_action_type get_gui_input()
       {
         switch(event.key.keysym.sym)
         {
-          case SDLK_ESCAPE:
+          case SDLK_ESCAPE: // MENU
             gui_action = CURSOR_EXIT;
             break;
 
@@ -782,12 +779,11 @@ gui_action_type get_gui_input()
             gui_action = CURSOR_RIGHT;
             break;
 
-          case SDLK_RETURN:
-          case SDLK_LCTRL:
+          case SDLK_SPACE: // A
             gui_action = CURSOR_SELECT;
             break;
 
-          case SDLK_LALT:
+          case SDLK_LCTRL: // B 
             gui_action = CURSOR_BACK;
             break;
 	 default:
@@ -858,7 +854,7 @@ u32 update_input()
           quit();
         }*/
 #ifdef PC_BUILD
-        if(event.key.keysym.sym == SDLK_RCTRL)
+        if(event.key.keysym.sym == SDLK_ESCAPE) // TRIMUI menu
 #else
         if(event.key.keysym.sym == SDLK_F10)
 #endif
