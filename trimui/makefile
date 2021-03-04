@@ -25,7 +25,7 @@ CFLAGS     += -I$(INCLUDEDIR) -DARM_ARCH -DPC_BUILD -Wall -march=armv5te -mtune=
 CFLAGS     += -Ofast -fdata-sections -ffunction-sections -fno-PIC
 
 # expecting to have PATH set up to get correct sdl-config first
-LIBS	   += -lSDL -lmmenu -lSDL_image -lSDL_TTF
+LIBS	   += -lSDL -lSDL_image -lSDL_TTF -ldl
 LIBS       += -ldl -lpthread -lz -lgcov -Wl,--as-needed -Wl,--gc-sections -flto -s -lpng
 
 # Compilation:
