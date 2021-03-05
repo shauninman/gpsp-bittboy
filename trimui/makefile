@@ -7,7 +7,7 @@
 
 .PHONY: clean
 	
-CROSS_COMPILE := /opt/trimui/bin/arm-unknown-linux-gnueabi-
+CROSS_COMPILE := /opt/trimui-toolchain/bin/arm-buildroot-linux-gnueabi-
 
 CC = $(CROSS_COMPILE)gcc
 
@@ -25,7 +25,7 @@ CFLAGS     += -I$(INCLUDEDIR) -DARM_ARCH -DPC_BUILD -Wall -march=armv5te -mtune=
 CFLAGS     += -Ofast -fdata-sections -ffunction-sections -fno-PIC
 
 # expecting to have PATH set up to get correct sdl-config first
-LIBS	   += -lSDL -lSDL_image -lSDL_TTF -ldl
+LIBS	   += -lSDL -lSDL_ttf -lSDL_image -ldl
 LIBS       += -ldl -lpthread -lz -lgcov -Wl,--as-needed -Wl,--gc-sections -flto -s -lpng
 
 # Compilation:

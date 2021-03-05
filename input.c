@@ -19,7 +19,9 @@
 
 #include "common.h"
 
+#include <dlfcn.h>
 #include <mmenu.h>
+static void* mmenu = NULL;
 
 // Special thanks to psp298 for the analog->dpad code!
 
@@ -833,8 +835,6 @@ gui_action_type get_gui_input()
   }
   return gui_action;
 }
-
-static void* mmenu = NULL;
 
 u32 update_input()
 {
