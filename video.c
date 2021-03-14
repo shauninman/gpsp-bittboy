@@ -3580,6 +3580,53 @@ static inline void gba_upscale(uint16_t *to, uint16_t *from,
 	}
 }
 
+#define AVERAGE16(c1, c2) (((c1) + (c2) + (((c1) ^ (c2)) & 0x0821))>>1)  //More accurate
+static inline void gba_nofilter_upscale(uint16_t *dst, uint16_t *src, int h)
+{
+    int Eh = 0;
+    int dh = 0;
+    int width = 320;
+    int vf = 0;
+    
+    dst += ((240-h)/2) * 320;  // blank upper border. h=240(full) or h=214(aspect)
+
+    int x, y;
+    for (y = 0; y < 240; y++)
+    {
+        int source = dh * width;
+        for (x = 0; x < 320/4; x++)
+        {
+            register uint16_t a, b, c;
+
+            a = src[source];
+            b = src[source+1];
+            c = src[source+2];
+
+            if(vf == 1){
+                a = AVERAGE16(a, src[source+width]);
+                b = AVERAGE16(b, src[source+width+1]);
+                c = AVERAGE16(c, src[source+width+2]);
+            }
+            
+            *dst++ = a;
+            *dst++ = (AVERAGE16(a,b) & 0b0000000000011111) | (b & 0b1111111111100000);
+            *dst++ = (b & 0b0000011111111111) | (AVERAGE16(b,c) & 0b1111100000000000);
+            *dst++ = c;
+            source+=3;
+
+        }
+        Eh += 160;
+        if(Eh >= h) {
+            Eh -= h;
+            dh++;
+            vf = 0;
+        }
+        else
+            vf = 1;
+    }
+}
+
+
 static inline void gba_upscale_aspect(uint16_t *to, uint16_t *from,
 	  uint32_t src_x, uint32_t src_y, uint32_t src_pitch, uint32_t dst_pitch)
 {
@@ -3816,14 +3863,19 @@ void flip_screen()
 				SDL_BlitSurface(screen, &srect, rl_screen, &drect);
 			break;
 			case 1:
-			
+                if (screen_filter)
 					gba_upscale_aspect((uint16_t*) ((uint8_t*)
 					rl_screen->pixels +
 					(((GCW0_SCREEN_HEIGHT - (GBA_SCREEN_HEIGHT) * 4 / 3) / 2) * rl_screen->pitch)) /* center vertically */,
 					screen->pixels, GBA_SCREEN_WIDTH, GBA_SCREEN_HEIGHT, screen->pitch, rl_screen->pitch);
+                else
+					gba_nofilter_upscale(rl_screen->pixels,screen->pixels, 214);
 			break;
 			default:
-				gba_upscale(rl_screen->pixels, screen->pixels, GBA_SCREEN_WIDTH, GBA_SCREEN_HEIGHT, screen->pitch, rl_screen->pitch);
+                if(screen_filter)
+                    gba_upscale(rl_screen->pixels, screen->pixels, GBA_SCREEN_WIDTH, GBA_SCREEN_HEIGHT, screen->pitch, rl_screen->pitch);
+                else
+					gba_nofilter_upscale(rl_screen->pixels,screen->pixels, 240);                    
 			break;
 		}
 	}
