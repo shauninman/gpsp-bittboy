@@ -1228,17 +1228,23 @@ u32 menu(u16 *original_screen)
     }
   }
 
+  void save_configs()
+  {
+      save_config_file();
+      save_controllers();
+  }
+
   void menu_exit()
   {
     if(!first_load)
      repeat = 0;
+	save_configs();
   }
 
   void menu_quit()
   {
     menu_get_clock_speed();
-    save_config_file();
-    save_controllers();
+    save_configs();
     quit();
   }
 
