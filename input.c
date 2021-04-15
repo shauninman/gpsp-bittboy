@@ -22,6 +22,7 @@
 #include <dlfcn.h>
 #include <mmenu.h>
 static void* mmenu = NULL;
+static int resume_slot = -1;
 
 // Special thanks to psp298 for the analog->dpad code!
 
@@ -838,6 +839,18 @@ gui_action_type get_gui_input()
 
 u32 update_input()
 {
+    // TODO: this is a weird place to be doing this but...
+    if (resume_slot!=-1) {
+		savestate_slot = resume_slot;
+		char current_savestate_filename[512];
+		get_savestate_filename_noshot(savestate_slot,
+		current_savestate_filename);
+		load_state(current_savestate_filename);
+		debug_on();
+		resume_slot = -1;
+		return 1;
+    }
+	
   SDL_Event event;
   
   io_registers[REG_P1] = (~key) & 0x3FF;
@@ -969,6 +982,11 @@ u32 update_input()
 void init_input()
 {
   mmenu = dlopen("libmmenu.so", RTLD_LAZY);
+  if (mmenu) {
+	ResumeSlot_t ResumeSlot = (ResumeSlot_t)dlsym(mmenu, "ResumeSlot");
+	if (ResumeSlot) resume_slot = ResumeSlot();
+  }
+	
   u32 joystick_count = SDL_NumJoysticks();
 
   if(joystick_count > 0)
